@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Christian y Clara 💖 - Horarios</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #e84393;
+            --secondary-color: #fd79a8;
+            --accent-color: #a29bfe;
+            --light-pink: #ffe8f3;
+            --dark-text: #2d3436;
+            --light-text: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #e84393 0%, #fd79a8 50%, #a29bfe 100%);
+            --visited-color: #00b894;
+            --wishlist-color: #fd79a8;
+            --purchased-color: #b2bec3;
+            --mochito-color: #6c5ce7;
+            --mochita-color: #fd79a8;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #ffe8f3 0%, #dfe6e9 100%);
+            color: var(--dark-text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 15px;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23e84393' fill-opacity='0.05' d='M0,224L48,213.3C96,203,192,181,288,160C384,139,480,117,576,122.7C672,128,768,160,864,170.7C960,181,1056,171,1152,165.3C1248,160,1344,160,1392,160L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        header {
+            background: var(--gradient);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--gradient);
+        }
+        
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+        
+        .user-selector {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .user-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+        }
+        
+        .user-btn.active {
+            background: white;
+        }
+        
+        .user-btn[data-user="mochito"].active {
+            color: var(--mochito-color);
+        }
+        
+        .user-btn[data-user="mochita"].active {
+            color: var(--mochita-color);
+        }
+        
+        .user-btn[data-user="both"].active {
+            color: var(--primary-color);
+        }
+        
+        .user-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .calendar-container {
+            padding: 15px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 700px;
+        }
+        
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 8px;
+            text-align: center;
+            height: 50px;
+            font-size: 0.85rem;
+        }
+        
+        th {
+            background-color: #f8f8f8;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .hour-cell {
+            background-color: #f0f0f0;
+            font-weight: 600;
+            width: 80px;
+            position: relative;
+        }
+        
+        .delete-time-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: transparent;
+            border: none;
+            color: #ff7675;
+            cursor: pointer;
+            font-size: 10px;
+            opacity: 0.7;
+            transition: all 0.2s ease;
+            padding: 2px;
+        }
+        
+        .delete-time-btn:hover {
+            opacity: 1;
+            transform: scale(1.2);
+            color: #e74c3c;
+        }
+        
+        .schedule-cell {
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .schedule-cell:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .schedule-cell.editable:hover {
+            background-color: #f0f8ff;
+        }
+        
+        .activity {
+            font-size: 0.75rem;
+            padding: 5px;
+            border-radius: 5px;
+            color: white;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin: 2px 0;
+        }
+        
+        .controls {
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f9f9f9;
+            border-top: 1px solid #eee;
+        }
+        
+        .view-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .view-btn {
+            padding: 8px 15px;
+            background: #eee;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .view-btn.active {
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .view-btn[data-view="mochito"].active {
+            background: var(--mochito-color);
+        }
+        
+        .view-btn[data-view="mochita"].active {
+            background: var(--mochita-color);
+        }
+        
+        .view-btn[data-view="week"].active {
+            background: var(--primary-color);
+        }
+        
+        .view-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .save-btn {
+            padding: 12px 20px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(232, 67, 147, 0.4);
+            position: relative;
+            overflow: hidden;
+            align-self: center;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .save-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(to right, var(--secondary-color), var(--primary-color));
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+        
+        .save-btn:hover::before {
+            width: 100%;
+        }
+        
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(232, 67, 147, 0.5);
+        }
+        
+        .add-time-btn {
+            padding: 10px 15px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(162, 155, 254, 0.3);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        
+        .add-time-btn:hover {
+            background: #7c6cf9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(162, 155, 254, 0.4);
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: white;
+            color: var(--primary-color);
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+            padding: 15px;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary-color);
+            display: inline-block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--dark-text);
+            font-size: 0.9rem;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-family: 'Montserrat', sans-serif;
+            background: #f8f8f8;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(162, 155, 254, 0.3);
+        }
+        
+        .time-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .time-input {
+            flex: 1;
+        }
+        
+        .form-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .cancel-btn {
+            padding: 10px 15px;
+            background: #eee;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .cancel-btn:hover {
+            background: #ddd;
+            transform: translateY(-2px);
+        }
+        
+        .confirm-btn {
+            padding: 10px 15px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(232, 67, 147, 0.3);
+            font-size: 0.9rem;
+        }
+        
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(232, 67, 147, 0.4);
+        }
+        
+        .delete-btn {
+            padding: 10px 15px;
+            background: #ff7675;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            order: -1;
+        }
+        
+        .delete-btn:hover {
+            background: #e74c3c;
+            transform: translateY(-2px);
+        }
+        
+        .color-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+        
+        .color-option:hover {
+            transform: scale(1.15);
+        }
+        
+        .custom-time-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 12px;
+            gap: 10px;
+        }
+        
+        .custom-time-input {
+            padding: 10px 12px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            width: 80px;
+            text-align: center;
+            background: white;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .custom-time-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(162, 155, 254, 0.2);
+        }
+        
+        .floating-hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .heart {
+            position: absolute;
+            color: rgba(232, 67, 147, 0.2);
+            font-size: 16px;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+        
+        .time-inputs-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .time-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        /* Media queries para responsive */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 95%;
+                margin-top: 30px;
+                margin-bottom: 30px;
+            }
+            
+            header {
+                padding: 25px 20px;
+            }
+            
+            h1 {
+                font-size: 3rem;
+            }
+            
+            .user-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+            
+            .calendar-container {
+                padding: 20px;
+            }
+            
+            th, td {
+                padding: 10px;
+                font-size: 0.9rem;
+                height: 60px;
+            }
+            
+            .hour-cell {
+                width: 90px;
+            }
+            
+            .activity {
+                font-size: 0.8rem;
+                padding: 6px;
+            }
+            
+            .controls {
+                padding: 25px 20px;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .view-selector {
+                justify-content: flex-start;
+            }
+            
+            .save-btn {
+                width: auto;
+                align-self: auto;
+            }
+            
+            .custom-time-container {
+                flex-direction: row;
+                padding: 20px;
+            }
+            
+            .form-actions {
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+            
+            .delete-btn {
+                order: 0;
+                margin-right: auto;
+            }
+            
+            .back-btn {
+                top: 20px;
+                left: 20px;
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1600px;
+            }
+            
+            header {
+                padding: 30px;
+            }
+            
+            h1 {
+                font-size: 3.5rem;
+            }
+            
+            .user-btn {
+                padding: 12px 25px;
+            }
+            
+            .calendar-container {
+                padding: 25px;
+            }
+            
+            th, td {
+                padding: 12px;
+            }
+            
+            .hour-cell {
+                width: 100px;
+            }
+            
+            .activity {
+                font-size: 0.85rem;
+            }
+            
+            .controls {
+                padding: 25px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .user-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            th, td {
+                padding: 6px;
+                font-size: 0.75rem;
+                height: 45px;
+            }
+            
+            .hour-cell {
+                width: 70px;
+                font-size: 0.75rem;
+            }
+            
+            .activity {
+                font-size: 0.7rem;
+                padding: 4px;
+            }
+            
+            .back-btn {
+                top: 10px;
+                left: 10px;
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .modal-content {
+                padding: 15px;
+            }
+            
+            .modal h3 {
+                font-size: 1.4rem;
+            }
+            
+            .color-option {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-hearts">
+        <div class="heart" style="left: 5%; animation-delay: 0s;">❤</div>
+        <div class="heart" style="left: 15%; animation-delay: 2s;">❤</div>
+        <div class="heart" style="left: 25%; animation-delay: 4s;">❤</div>
+        <div class="heart" style="left: 35%; animation-delay: 6s;">❤</div>
+        <div class="heart" style="left: 45%; animation-delay: 8s;">❤</div>
+        <div class="heart" style="left: 55%; animation-delay: 10s;">❤</div>
+        <div class="heart" style="left: 65%; animation-delay: 12s;">❤</div>
+        <div class="heart" style="left: 75%; animation-delay: 14s;">❤</div>
+        <div class="heart" style="left: 85%; animation-delay: 16s;">❤</div>
+        <div class="heart" style="left: 95%; animation-delay: 18s;">❤</div>
+    </div>
+
+    <!-- Botón para volver al inicio -->
+    <a href="/" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Volver
+    </a>
+
+    <div class="container">
+        <header>
+            <h1>Nuestros Horarios</h1>
+            <div class="user-selector">
+                <button class="user-btn active" data-user="both">Ver Ambos</button>
+                <button class="user-btn" data-user="mochito">Solo Mochito</button>
+                <button class="user-btn" data-user="mochita">Solo Mochita</button>
+            </div>
+        </header>
+        
+        <div class="custom-time-container">
+            <span class="time-label">Hora personalizada:</span>
+            <div class="time-inputs-container">
+                <input type="number" id="custom-hour" class="custom-time-input" min="0" max="23" placeholder="Hora" value="8">
+                <span>:</span>
+                <input type="number" id="custom-minute" class="custom-time-input" min="0" max="59" placeholder="Min" value="0">
+                <button class="add-time-btn" id="add-time-btn"><i class="fas fa-plus"></i> Agregar</button>
+            </div>
+        </div>
+        
+        <div class="calendar-container">
+            <table id="schedule-table">
+                <thead>
+                    <tr>
+                        <th class="hour-cell">HORAS</th>
+                        <th>LUNES</th>
+                        <th>MARTES</th>
+                        <th>MIÉRCOLES</th>
+                        <th>JUEVES</th>
+                        <th>VIERNES</th>
+                        <th>SÁBADO</th>
+                        <th>DOMINGO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Las filas se generarán con JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="controls">
+            <div class="view-selector">
+                <button class="view-btn active" data-view="week">Vista Semanal</button>
+                <button class="view-btn" data-view="mochito">Solo Mochito</button>
+                <button class="view-btn" data-view="mochita">Solo Mochita</button>
+            </div>
+            <button class="save-btn" id="save-btn"><i class="fas fa-save"></i> Guardar Cambios</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="event-modal">
+        <div class="modal-content">
+            <h3>Editar Actividad</h3>
+            <div class="form-group">
+                <label for="activity-day">Día:</label>
+                <input type="text" id="activity-day" readonly>
+            </div>
+            <div class="form-group">
+                <label for="activity-time">Hora:</label>
+                <div class="time-input-container">
+                    <div class="time-input">
+                        <input type="number" id="activity-hour" min="0" max="23" placeholder="Hora" class="custom-time-input">
+                    </div>
+                    <span>:</span>
+                    <div class="time-input">
+                        <input type="number" id="activity-minute" min="0" max="59" placeholder="Min" class="custom-time-input">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="activity-text">Actividad:</label>
+                <input type="text" id="activity-text" placeholder="Describe tu actividad">
+            </div>
+            <div class="form-group">
+                <label>Color:</label>
+                <div class="color-options">
+                    <div class="color-option selected" style="background-color: #e84393;" data-color="#e84393"></div>
+                    <div class="color-option" style="background-color: #fd79a8;" data-color="#fd79a8"></div>
+                    <div class="color-option" style="background-color: #a29bfe;" data-color="#a29bfe"></div>
+                    <div class="color-option" style="background-color: #00b894;" data-color="#00b894"></div>
+                    <div class="color-option" style="background-color: #fdcb6e;" data-color="#fdcb6e"></div>
+                    <div class="color-option" style="background-color: #6c5ce7;" data-color="#6c5ce7"></div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="delete-btn" id="delete-btn">Eliminar</button>
+                <button class="cancel-btn" id="cancel-btn">Cancelar</button>
+                <button class="confirm-btn" id="confirm-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+  // ========================
+  // Variables globales
+  // ========================
+  let currentUser = 'both';
+  let currentView  = 'week';
+  let selectedCell = null;
+  let selectedColor = '#e84393';
+  let originalTime = null;
+
+  // Estructura de horarios y horas visibles
+  let schedules = { mochito: {}, mochita: {} };
+  let customTimes = { mochito: [], mochita: [] };
+
+  // Horas por defecto si la base está vacía
+  const fallbackDefaultTimes = ["8:00","9:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"];
+  const DAYS = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO'];
+
+  // ========================
+  // Helpers de horas
+  // ========================
+  function compareTimeStrings(a, b) {
+    const [ah, am] = a.split(':').map(Number);
+    const [bh, bm] = b.split(':').map(Number);
+    if (ah !== bh) return ah - bh;
+    return am - bm;
+  }
+
+  function uniqueSortedTimes(arr) {
+    return Array.from(new Set(arr)).sort(compareTimeStrings);
+  }
+
+  function extractTimesFromSchedules(userKey) {
+    const s = schedules[userKey] || {};
+    const set = new Set();
+    Object.values(s).forEach(timesObj => {
+      if (timesObj && typeof timesObj === 'object') {
+        Object.keys(timesObj).forEach(t => set.add(t));
+      }
+    });
+    return Array.from(set).sort(compareTimeStrings);
+  }
+
+  // Formatear hora a formato HH:MM
+  function formatTime(hours, minutes) {
+    const h = Number.isFinite(parseInt(hours)) ? parseInt(hours) : 0;
+    const m = Number.isFinite(parseInt(minutes)) ? parseInt(minutes) : 0;
+    return `${h}:${m.toString().padStart(2, '0')}`;
+  }
+
+  // Parsear hora desde formato HH:MM
+  function parseTime(timeStr) {
+    const parts = timeStr.split(':');
+    return {
+      hour: parseInt(parts[0]) || 0,
+      minute: parseInt(parts[1]) || 0
+    };
+  }
+
+  // ========================
+  // Cargar desde el servidor (FORMA CORRECTA)
+  // ========================
+  async function loadSchedules() {
+    try {
+      const res = await fetch('/api/schedules', { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      // Tu backend devuelve { schedules: {...}, customTimes: {...} }
+      const srvSchedules   = data && data.schedules   ? data.schedules   : { mochito:{}, mochita:{} };
+      const srvCustomTimes = data && data.customTimes ? data.customTimes : { mochito:[],  mochita:[] };
+
+      schedules = {
+        mochito: srvSchedules.mochito || {},
+        mochita: srvSchedules.mochita || {}
+      };
+
+      // Construir horas visibles con lo de la BD + fallback para que siempre haya filas
+      const timesMochitoFromDB = uniqueSortedTimes([
+        ...(srvCustomTimes.mochito || []),
+        ...extractTimesFromSchedules('mochito')
+      ]);
+      const timesMochitaFromDB = uniqueSortedTimes([
+        ...(srvCustomTimes.mochita || []),
+        ...extractTimesFromSchedules('mochita')
+      ]);
+
+      customTimes.mochito = timesMochitoFromDB.length ? timesMochitoFromDB : [...fallbackDefaultTimes];
+      customTimes.mochita = timesMochitaFromDB.length ? timesMochitaFromDB : [...fallbackDefaultTimes];
+
+    } catch (e) {
+      console.error('Error cargando horarios del servidor:', e);
+      // Fallback local para no dejar la tabla vacía
+      schedules = { mochito:{}, mochita:{} };
+      customTimes.mochito = [...fallbackDefaultTimes];
+      customTimes.mochita = [...fallbackDefaultTimes];
+    }
+
+    generateScheduleTable();
+  }
+
+  // ========================
+  // Guardar en el servidor (RUTA CORRECTA)
+  // ========================
+  async function saveSchedules() {
+    const btn = document.getElementById('save-btn');
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+    try {
+      // Tu backend guarda en POST /api/schedules/save con {schedules, customTimes}
+      const payload = { schedules, customTimes };
+      const res = await fetch('/api/schedules/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const j = await res.json();
+      if (!j.ok) throw new Error('Respuesta inválida');
+      alert('Horarios guardados correctamente');
+    } catch (e) {
+      console.error('Error al guardar en servidor:', e);
+      alert('No se pudo guardar. Inténtalo de nuevo.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  }
+
+  // ========================
+  // UI: generar tabla
+  // ========================
+  function generateScheduleTable() {
+    const tableBody = document.querySelector('#schedule-table tbody');
+    tableBody.innerHTML = '';
+
+    // Determinar qué horas mostrar según la vista
+    let timesToShow = [];
+    if (currentView === 'week') {
+      const allTimes = uniqueSortedTimes([
+        ...customTimes.mochito,
+        ...customTimes.mochita,
+        ...extractTimesFromSchedules('mochito'),
+        ...extractTimesFromSchedules('mochita'),
+      ]);
+      timesToShow = allTimes;
+    } else {
+      const base = currentView === 'mochito' ? 'mochito' : 'mochita';
+      const fromDB = extractTimesFromSchedules(base);
+      timesToShow = uniqueSortedTimes([
+        ...customTimes[base],
+        ...fromDB
+      ]);
+    }
+
+    timesToShow.forEach(timeFormatted => {
+      const row = document.createElement('tr');
+
+      // Celda de hora
+      const hourCell = document.createElement('td');
+      hourCell.className = 'hour-cell';
+      hourCell.textContent = timeFormatted;
+
+      // Botón eliminar hora (solo en vista de usuario específico)
+      if (currentView !== 'week') {
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'delete-time-btn';
+        deleteButton.innerHTML = '<i class="fas fa-times"></i>';
+        deleteButton.title = `Eliminar esta hora de ${currentView}`;
+        deleteButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteTime(timeFormatted, currentView);
+        });
+        hourCell.appendChild(deleteButton);
+      }
+
+      row.appendChild(hourCell);
+
+      // Celdas de días
+      DAYS.forEach(day => {
+        const cell = document.createElement('td');
+        cell.className = 'schedule-cell';
+        cell.dataset.time = timeFormatted;
+        cell.dataset.day = day;
+
+        // Editable solo si hemos elegido un usuario específico
+        if (currentUser !== 'both') {
+          cell.classList.add('editable');
+        }
+
+        // Mostrar actividades según vista
+        if (currentView === 'week' || currentView === 'mochito') {
+          const mochitoActivity = schedules.mochito[day] && schedules.mochito[day][timeFormatted];
+          if (mochitoActivity) {
+            const activityDiv = document.createElement('div');
+            activityDiv.className = 'activity';
+            activityDiv.textContent = 'M: ' + mochitoActivity.activity;
+            activityDiv.style.backgroundColor = mochitoActivity.color || '#6c5ce7';
+            cell.appendChild(activityDiv);
+          }
+        }
+
+        if (currentView === 'week' || currentView === 'mochita') {
+          const mochitaActivity = schedules.mochita[day] && schedules.mochita[day][timeFormatted];
+          if (mochitaActivity) {
+            const activityDiv = document.createElement('div');
+            activityDiv.className = 'activity';
+            activityDiv.textContent = 'C: ' + mochitaActivity.activity;
+            activityDiv.style.backgroundColor = mochitaActivity.color || '#fd79a8';
+            cell.appendChild(activityDiv);
+          }
+        }
+
+        // Abrir modal al hacer clic (si es editable)
+        if (cell.classList.contains('editable')) {
+          cell.addEventListener('click', () => openEditModal(cell));
+        }
+
+        row.appendChild(cell);
+      });
+
+      tableBody.appendChild(row);
+    });
+  }
+
+  // ========================
+  // Gestión de horas custom
+  // ========================
+  function addCustomTime() {
+    const hourInput = document.getElementById('custom-hour');
+    const minuteInput = document.getElementById('custom-minute');
+
+    const hour = parseInt(hourInput.value) || 0;
+    const minute = parseInt(minuteInput.value) || 0;
+
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      alert('Por favor, introduce una hora válida (0-23) y minutos válidos (0-59)');
+      return;
+    }
+
+    const timeFormatted = formatTime(hour, minute);
+
+    // Determinar a qué usuario agregar la hora (si está "ambos", la añadimos a mochito)
+    const targetUser = currentUser === 'both' ? 'mochito' : currentUser;
+
+    if (!customTimes[targetUser].includes(timeFormatted)) {
+      customTimes[targetUser].push(timeFormatted);
+      customTimes[targetUser] = uniqueSortedTimes(customTimes[targetUser]);
+      generateScheduleTable();
+    }
+
+    hourInput.value = '';
+    minuteInput.value = '';
+  }
+
+  function deleteTime(timeToDelete, user) {
+    if (confirm(`¿Estás seguro de que quieres eliminar la hora ${timeToDelete} de ${user}?`)) {
+      // Quitar la hora de la lista visual
+      customTimes[user] = customTimes[user].filter(t => t !== timeToDelete);
+
+      // Eliminar todas las actividades de esa hora para el usuario
+      DAYS.forEach(day => {
+        if (schedules[user][day] && schedules[user][day][timeToDelete]) {
+          delete schedules[user][day][timeToDelete];
+        }
+      });
+
+      generateScheduleTable();
+    }
+  }
+
+  // ========================
+  // Modal de edición
+  // ========================
+  function openEditModal(cell) {
+    selectedCell = cell;
+    const modal = document.getElementById('event-modal');
+    const time = cell.dataset.time;
+    const day  = cell.dataset.day;
+    originalTime = time;
+
+    const { hour, minute } = parseTime(time);
+    document.getElementById('activity-day').value   = day;
+    document.getElementById('activity-hour').value  = hour;
+    document.getElementById('activity-minute').value = minute;
+
+    const currentUserKey = (currentUser === 'mochito') ? 'mochito' : 'mochita';
+    const existingActivity = schedules[currentUserKey][day] && schedules[currentUserKey][day][time];
+
+    if (existingActivity) {
+      document.getElementById('activity-text').value = existingActivity.activity || '';
+      selectedColor = existingActivity.color || '#e84393';
+      document.querySelectorAll('.color-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.color === selectedColor);
+      });
+    } else {
+      document.getElementById('activity-text').value = '';
+      selectedColor = '#e84393';
+      const options = document.querySelectorAll('.color-option');
+      options.forEach((opt, idx) => opt.classList.toggle('selected', idx === 0));
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  function saveActivity() {
+    const day = document.getElementById('activity-day').value;
+    const hour = document.getElementById('activity-hour').value;
+    const minute = document.getElementById('activity-minute').value;
+    const activity = document.getElementById('activity-text').value.trim();
+    const currentUserKey = (currentUser === 'mochito') ? 'mochito' : 'mochita';
+
+    if (!hour && hour !== 0) {
+      alert('Por favor, introduce una hora válida');
+      return;
+    }
+
+    const newTime = formatTime(hour, minute);
+
+    // Añadir fila de hora si no existe en el listado visual
+    if (!customTimes[currentUserKey].includes(newTime)) {
+      customTimes[currentUserKey].push(newTime);
+      customTimes[currentUserKey] = uniqueSortedTimes(customTimes[currentUserKey]);
+    }
+
+    if (!schedules[currentUserKey][day]) {
+      schedules[currentUserKey][day] = {};
+    }
+
+    if (!activity) {
+      // Sin texto => borrar actividad en esa hora
+      if (schedules[currentUserKey][day][originalTime]) {
+        delete schedules[currentUserKey][day][originalTime];
+      }
+    } else {
+      // Si cambió la hora, borrar la entrada anterior
+      if (originalTime !== newTime && schedules[currentUserKey][day][originalTime]) {
+        delete schedules[currentUserKey][day][originalTime];
+      }
+      // Guardar/actualizar
+      schedules[currentUserKey][day][newTime] = {
+        activity: activity,
+        color: selectedColor
+      };
+    }
+
+    document.getElementById('event-modal').style.display = 'none';
+    generateScheduleTable();
+  }
+
+  function deleteActivity() {
+    const day = document.getElementById('activity-day').value;
+    const currentUserKey = (currentUser === 'mochito') ? 'mochito' : 'mochita';
+
+    if (schedules[currentUserKey][day] && schedules[currentUserKey][day][originalTime]) {
+      delete schedules[currentUserKey][day][originalTime];
+    }
+
+    document.getElementById('event-modal').style.display = 'none';
+    generateScheduleTable();
+  }
+
+  // ========================
+  // Inicialización
+  // ========================
+  document.addEventListener('DOMContentLoaded', () => {
+    // Cargar horarios desde Postgres
+    loadSchedules();
+
+    // Selector “Ver Ambos / Solo Mochito / Solo Mochita”
+    document.querySelectorAll('.user-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentUser = btn.dataset.user;
+
+        if (currentUser !== 'both') {
+          document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+          document.querySelector(`.view-btn[data-view="${currentUser}"]`).classList.add('active');
+          currentView = currentUser;
+        } else {
+          document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+          document.querySelector(`.view-btn[data-view="week"]`).classList.add('active');
+          currentView = 'week';
+        }
+
+        generateScheduleTable();
+      });
+    });
+
+    // Selector de vista
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentView = btn.dataset.view;
+        generateScheduleTable();
+      });
+    });
+
+    // Colores del modal
+    document.querySelectorAll('.color-option').forEach(option => {
+      option.addEventListener('click', () => {
+        document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedColor = option.dataset.color;
+      });
+    });
+
+    // Añadir hora personalizada
+    document.getElementById('add-time-btn').addEventListener('click', addCustomTime);
+
+    // Botones del modal
+    document.getElementById('cancel-btn').addEventListener('click', () => {
+      document.getElementById('event-modal').style.display = 'none';
+    });
+    document.getElementById('confirm-btn').addEventListener('click', saveActivity);
+    document.getElementById('delete-btn').addEventListener('click', deleteActivity);
+
+    // Guardar en servidor
+    document.getElementById('save-btn').addEventListener('click', saveSchedules);
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('event-modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('event-modal')) {
+        document.getElementById('event-modal').style.display = 'none';
+      }
+    });
+  });
+</script>
+
+
+</body>
+</html>
