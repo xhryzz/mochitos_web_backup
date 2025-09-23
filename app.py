@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, send_file, jsonify
 import psycopg2
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import random
 import os
 from werkzeug.utils import secure_filename
@@ -144,7 +144,6 @@ def init_db():
                 )
             ''')
 
-            
             # Tabla de preguntas diarias
             c.execute('''
                 CREATE TABLE IF NOT EXISTS daily_questions (
@@ -197,20 +196,18 @@ def init_db():
                 )
             ''')
             
-            # Tabla para fotos de viajes - ahora almacena datos binarios
+            # Tabla para fotos de viajes - ahora solo almacena enlaces
             c.execute('''
                 CREATE TABLE IF NOT EXISTS travel_photos (
                     id SERIAL PRIMARY KEY,
                     travel_id INTEGER,
-                    image_data BYTEA,
-                    filename TEXT,
-                    mime_type TEXT,
+                    image_url TEXT NOT NULL,
                     uploaded_by TEXT,
                     uploaded_at TEXT,
                     FOREIGN KEY(travel_id) REFERENCES travels(id)
                 )
             ''')
-            
+
             # Tabla para la lista de deseos
             c.execute('''
                 CREATE TABLE IF NOT EXISTS wishlist (
@@ -276,6 +273,21 @@ def init_db():
                 conn.rollback()
             else:
                 conn.commit()
+
+                # Asegurar columna 'priority' (alta/media/baja) en wishlist
+            # Asegurar columna 'priority' (alta/media/baja) en wishlist
+            try:
+                c.execute("""
+                    ALTER TABLE wishlist
+                    ADD COLUMN IF NOT EXISTS priority TEXT
+                    CHECK (priority IN ('alta','media','baja'))
+                    DEFAULT 'media'
+                """)
+                conn.commit()  # <-- añade esto
+            except Exception as e:
+                print(f"ALTER wishlist priority: {e}")
+
+
 
 init_db()
 
@@ -377,19 +389,93 @@ def get_travel_photos(travel_id):
     conn = get_db_connection()
     try:
         with conn.cursor() as c:
-            c.execute("SELECT id, image_data, mime_type, uploaded_by FROM travel_photos WHERE travel_id=%s ORDER BY id DESC", (travel_id,))
+            c.execute("SELECT id, image_url, uploaded_by FROM travel_photos WHERE travel_id=%s ORDER BY id DESC", (travel_id,))
             photos = []
             for row in c.fetchall():
-                photo_id, image_data, mime_type, uploaded_by = row
-                # Convertir a base64 para mostrar en HTML
+                photo_id, image_url, uploaded_by = row
                 photos.append({
                     'id': photo_id,
-                    'data_url': f"data:{mime_type};base64,{b64encode(image_data).decode('utf-8')}",
+                    'url': image_url,
                     'uploaded_by': uploaded_by
                 })
             return photos
     finally:
         conn.close()
+
+# -----------------------------
+#  Cálculo de rachas (NEW)
+# -----------------------------
+def compute_streaks():
+    """
+    Calcula:
+      - current_streak: racha actual de días consecutivos (hasta hoy si hoy está completo,
+                        o hasta el último día completo si hoy no lo está).
+      - best_streak: mejor racha histórica.
+    Un día cuenta como 'completo' si existen respuestas de 'mochito' y 'mochita'
+    para la pregunta de ese día.
+    """
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as c:
+            # Traemos preguntas y cuántos usuarios distintos (de los 2) respondieron
+            c.execute("""
+                SELECT dq.id, dq.date, COUNT(DISTINCT a.username) AS cnt
+                FROM daily_questions dq
+                LEFT JOIN answers a 
+                  ON a.question_id = dq.id
+                 AND a.username IN ('mochito','mochita')
+                GROUP BY dq.id, dq.date
+                ORDER BY dq.date ASC
+            """)
+            rows = c.fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        return 0, 0
+
+    # Conjuntos de fechas
+    def parse_d(dtxt): 
+        return datetime.strptime(dtxt, "%Y-%m-%d").date()
+
+    question_dates = set(parse_d(r[1]) for r in rows)
+    complete_dates = [parse_d(r[1]) for r in rows if r[2] >= 2]
+    complete_dates_set = set(complete_dates)
+
+    if not complete_dates:
+        return 0, 0
+
+    # Mejor racha histórica
+    complete_dates_sorted = sorted(complete_dates)
+    best_streak = 1
+    run = 1
+    for i in range(1, len(complete_dates_sorted)):
+        if complete_dates_sorted[i] == complete_dates_sorted[i-1] + timedelta(days=1):
+            run += 1
+        else:
+            run = 1
+        if run > best_streak:
+            best_streak = run
+
+    # Racha actual: desde el último día completo más reciente hacia atrás sin huecos
+    today = date.today()
+    latest_complete = None
+    for d in sorted(complete_dates_set, reverse=True):
+        if d <= today:
+            latest_complete = d
+            break
+
+    if latest_complete is None:
+        return 0, best_streak
+
+    current_streak = 1
+    d = latest_complete - timedelta(days=1)
+    while d in complete_dates_set:
+        current_streak += 1
+        d -= timedelta(days=1)
+
+    return current_streak, best_streak
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -479,18 +565,15 @@ def index():
                         conn.commit()
                     return redirect('/')
 
-                if 'travel_photo' in request.files:
-                    file = request.files['travel_photo']
+                if 'travel_photo_url' in request.form:
                     travel_id = request.form.get('travel_id')
-                    if file and file.filename and travel_id:
-                        image_data = file.read()
-                        filename = secure_filename(file.filename)
-                        mime_type = file.mimetype
+                    image_url = request.form['travel_photo_url'].strip()
+                    if image_url and travel_id:
                         c.execute("""
-                            INSERT INTO travel_photos (travel_id, image_data, filename, mime_type, uploaded_by, uploaded_at)
-                            VALUES (%s, %s, %s, %s, %s, %s)
-                        """, (travel_id, image_data, filename, mime_type, user,
-                              datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                            INSERT INTO travel_photos (travel_id, image_url, uploaded_by, uploaded_at)
+                            VALUES (%s, %s, %s, %s)
+                        """, (travel_id, image_url, user,
+                            datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                         conn.commit()
                     return redirect('/')
 
@@ -498,16 +581,21 @@ def index():
                     product_name = request.form['product_name'].strip()
                     product_link = request.form.get('product_link', '').strip()
                     notes = request.form.get('wishlist_notes', '').strip()
+                    priority = request.form.get('priority', 'media').strip()  # NUEVO
+                    if priority not in ('alta', 'media', 'baja'):
+                        priority = 'media'
                     if product_name:
                         c.execute("""
-                            INSERT INTO wishlist (product_name, product_link, notes, created_by, created_at)
-                            VALUES (%s, %s, %s, %s, %s)
+                            INSERT INTO wishlist (product_name, product_link, notes, created_by, created_at, is_purchased, priority)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
                         """, (product_name, product_link, notes, user,
-                              datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            False, priority))
                         conn.commit()
                     return redirect('/')
 
-                       # --- Respuestas ---
+
+            # --- Respuestas ---
             c.execute("SELECT username, answer FROM answers WHERE question_id=%s", (question_id,))
             answers = c.fetchall()
 
@@ -533,17 +621,29 @@ def index():
 
             # --- Wishlist ---
             c.execute("""
-                SELECT id, product_name, product_link, notes, created_by, created_at, is_purchased
+                SELECT id, product_name, product_link, notes, created_by, created_at, is_purchased, 
+                    COALESCE(priority, 'media') AS priority
                 FROM wishlist
-                ORDER BY is_purchased, created_at DESC
+                ORDER BY 
+                    is_purchased ASC,
+                    CASE COALESCE(priority, 'media')
+                        WHEN 'alta'  THEN 0
+                        WHEN 'media' THEN 1
+                        ELSE 2
+                    END,
+                    created_at DESC
             """)
             wishlist_items = c.fetchall()
+
 
             banner_file = get_banner()
             profile_pictures = get_profile_pictures()
 
     finally:
         conn.close()
+
+    # --- Rachas (NEW) ---
+    current_streak, best_streak = compute_streaks()
 
     return render_template('index.html',
                            question=question_text,
@@ -560,10 +660,11 @@ def index():
                            username=user,
                            banner_file=banner_file,
                            profile_pictures=profile_pictures,
-                           login_error=None)
-
-
-
+                           login_error=None,
+                           # --- NUEVOS CONTEXT VARS ---
+                           current_streak=current_streak,
+                           best_streak=best_streak
+                           )
 
 # Eliminar viaje
 @app.route('/delete_travel', methods=['POST'])
@@ -680,15 +781,19 @@ def edit_wishlist_item():
         product_name = request.form['product_name'].strip()
         product_link = request.form.get('product_link', '').strip()
         notes = request.form.get('notes', '').strip()
+        priority = request.form.get('priority', 'media').strip()  # NUEVO
+        if priority not in ('alta', 'media', 'baja'):
+            priority = 'media'
         
         if product_name:
             conn = get_db_connection()
-            
             with conn.cursor() as c:
-                c.execute("UPDATE wishlist SET product_name=%s, product_link=%s, notes=%s WHERE id=%s", 
-                         (product_name, product_link, notes, item_id))
+                c.execute("""
+                    UPDATE wishlist 
+                    SET product_name=%s, product_link=%s, notes=%s, priority=%s
+                    WHERE id=%s
+                """, (product_name, product_link, notes, priority, item_id))
                 conn.commit()
-            
             return redirect('/')
     
     except Exception as e:
@@ -697,6 +802,7 @@ def edit_wishlist_item():
     finally:
         if 'conn' in locals():
             conn.close()
+
 
 # Marcar elemento como comprado/no comprado
 @app.route('/toggle_wishlist_status', methods=['POST'])
@@ -887,7 +993,6 @@ def get_image(image_id):
     try:
         with conn.cursor() as c:
             # Determinar de qué tabla obtener la imagen
-            # Esto es un ejemplo, necesitarías modificar según tus necesidades
             c.execute("SELECT image_data, mime_type FROM profile_pictures WHERE id=%s", (image_id,))
             row = c.fetchone()
             if row:
@@ -902,4 +1007,3 @@ def get_image(image_id):
 
 if __name__ == '__main__':
     app.run(debug=True)
-
